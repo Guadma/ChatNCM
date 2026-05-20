@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+model Contact {
+  id          String   @id @default(uuid())
+  phoneNumber String   @unique
+  name        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  conversations Conversation[]
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  contactId String
+  status    String   @default("open") // "open", "closed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contact   Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  messages  Message[]
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  content        String?
+  mediaUrl       String?
+  mediaType      String?  // e.g., "image/jpeg", "application/pdf"
+  direction      String   // "incoming", "outgoing"
+  status         String   @default("sent") // "sent", "delivered", "read", "failed"
+  waMessageId    String?  @unique // ID provided by WhatsApp to track status
+  timestamp      DateTime @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
